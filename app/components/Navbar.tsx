@@ -10,6 +10,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo.png"
+              alt="Zest Solutions Logo"
               height={100}
               width={200}
               className="object-contain"
