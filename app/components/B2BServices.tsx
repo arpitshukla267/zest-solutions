@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import Image from "next/image";
 
 const b2bServices = [
   {
@@ -170,14 +169,13 @@ const b2bServices = [
 
 /* ------------------------ Scroll reveal ------------------------ */
 
-// Number of cards per row (matches the grid: 1 / 2 / 4)
+// Number of cards per row (matches the grid: 2 on mobile/tablet, 4 on desktop)
 function useColumns() {
   const [cols, setCols] = useState(4);
 
   useEffect(() => {
     const update = () => {
-      const w = window.innerWidth;
-      setCols(w >= 1024 ? 4 : w >= 768 ? 2 : 1);
+      setCols(window.innerWidth >= 1024 ? 4 : 2);
     };
     update();
     window.addEventListener("resize", update);
@@ -250,8 +248,7 @@ export default function B2BServices() {
         </svg>
       </div>
 
-
-      <div className="relative max-w-[95vw] mx-auto px-6 lg:px-8">
+      <div className="relative max-w-[100vw] md:max-w-[95vw] mx-auto px-6 lg:px-8">
         {/* Header (centered) */}
         <div className="text-center max-w-3xl mx-auto mb-16 lg:mb-20">
           <h2 className="text-4xl lg:text-5xl font-bold text-plum leading-tight mb-5">
@@ -263,26 +260,26 @@ export default function B2BServices() {
           </p>
         </div>
 
-        {/* Cards grid: 1 per row on mobile, 2 on tablet, 4 on desktop */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Cards grid: 2 per row on mobile & tablet, 4 on desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
           {b2bServices.map((service, i) => (
             <Reveal key={service.title} index={i} cols={cols}>
-              <div className="group relative h-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-8 transition-all duration-500 hover:-translate-y-1 hover:border-orange/20 hover:bg-gradient-to-br hover:from-plum/[0.03] hover:to-orange/[0.03] hover:shadow-[0_20px_40px_-12px_rgba(30,10,50,0.18)]">
+              <div className="group relative h-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 md:p-8 transition-all duration-500 hover:-translate-y-1 hover:border-orange/20 hover:bg-gradient-to-br hover:from-plum/[0.03] hover:to-orange/[0.03] hover:shadow-[0_20px_40px_-12px_rgba(30,10,50,0.18)]">
                 {/* Number watermark */}
-                <span className="absolute top-4 right-5 text-6xl font-bold text-gray-50 group-hover:text-orange/5 transition-colors select-none">
+                <span className="absolute top-2 right-3 md:top-4 md:right-5 text-3xl md:text-6xl font-bold text-gray-50 group-hover:text-orange/5 transition-colors select-none">
                   {String(i + 1).padStart(2, "0")}
                 </span>
 
                 <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-cream text-plum flex items-center justify-center mb-5 group-hover:bg-orange group-hover:text-white transition-all duration-300">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-cream text-plum flex items-center justify-center mb-3 md:mb-5 group-hover:bg-orange group-hover:text-white transition-all duration-300">
                     {service.icon}
                   </div>
 
-                  <h3 className="text-lg font-bold text-plum mb-2">
+                  <h3 className="text-sm md:text-lg font-bold text-plum mb-1.5 md:mb-2 leading-snug">
                     {service.title}
                   </h3>
 
-                  <p className="text-sm text-gray-500 leading-relaxed">
+                  <p className="text-xs md:text-sm text-gray-500 leading-relaxed">
                     {service.description}
                   </p>
                 </div>

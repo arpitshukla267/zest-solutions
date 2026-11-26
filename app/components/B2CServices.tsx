@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /* ----------------------------- Data ----------------------------- */
 
-const iconClass = "h-6 w-6";
+const iconClass = "h-5 w-5 sm:h-6 sm:w-6";
 
 function ServiceIcon({ path }: { path: string }) {
   return (
@@ -88,6 +88,20 @@ const b2cServices = [
 
 /* ------------------------ Scroll reveal ------------------------ */
 
+// Number of cards per row (matches the grid: 2 below xl, 4 at xl+)
+function useColumns() {
+  const [cols, setCols] = useState(4);
+
+  useEffect(() => {
+    const update = () => setCols(window.innerWidth >= 1280 ? 4 : 2);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return cols;
+}
+
 function Reveal({
   children,
   delay = 0,
@@ -130,6 +144,8 @@ function Reveal({
 /* ----------------------------- Section ----------------------------- */
 
 export default function B2CServices() {
+  const cols = useColumns();
+
   return (
     <section className="relative overflow-hidden bg-cream py-16 lg:py-20">
       {/* Decorative background */}
@@ -168,7 +184,7 @@ export default function B2CServices() {
         </svg>
       </div>
 
-      <div className="relative mx-auto max-w-[95vw] px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-[100vw] md:max-w-[95vw] px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mx-auto mb-10 max-w-3xl text-center lg:mb-12">
           <h2 className="mb-4 text-4xl font-bold leading-tight text-plum lg:text-5xl">
@@ -180,11 +196,11 @@ export default function B2CServices() {
           </p>
         </div>
 
-        {/* Cards: each one reveals on its own as it scrolls into view */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Cards: 2 per row on mobile & tablet, 4 on xl. Each reveals on its own as it scrolls into view */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
           {b2cServices.map((service, i) => (
-            <Reveal key={service.title} delay={(i % 4) * 120}>
-              <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_16px_-6px_rgba(30,10,50,0.10)] transition-all duration-500 hover:-translate-y-1 hover:border-orange/30 hover:shadow-[0_20px_40px_-14px_rgba(30,10,50,0.20)]">
+            <Reveal key={service.title} delay={(i % cols) * 120}>
+              <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-3.5 shadow-[0_2px_16px_-6px_rgba(30,10,50,0.10)] transition-all duration-500 hover:-translate-y-1 hover:border-orange/30 hover:shadow-[0_20px_40px_-14px_rgba(30,10,50,0.20)] sm:p-6">
                 {/* Top accent line */}
                 <span
                   aria-hidden="true"
@@ -192,28 +208,28 @@ export default function B2CServices() {
                 />
 
                 {/* Icon + index */}
-                <div className="mb-5 flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange/10 to-orange/5 text-orange transition-all duration-300 group-hover:from-orange group-hover:to-orange-light group-hover:text-white">
+                <div className="mb-3 flex items-start justify-between sm:mb-5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange/10 to-orange/5 text-orange transition-all duration-300 group-hover:from-orange group-hover:to-orange-light group-hover:text-white sm:h-12 sm:w-12">
                     <ServiceIcon path={service.iconPath} />
                   </div>
                 </div>
 
-                <h3 className="mb-2 text-lg font-bold leading-snug text-plum">
+                <h3 className="mb-1.5 text-sm font-bold leading-snug text-plum sm:mb-2 sm:text-lg">
                   {service.title}
                 </h3>
-                <p className="mb-5 text-sm leading-relaxed text-gray-500">
+                <p className="mb-3 text-xs leading-relaxed text-gray-500 sm:mb-5 sm:text-sm">
                   {service.description}
                 </p>
 
                 {/* Items */}
-                <ul className="mt-auto space-y-2 border-t border-gray-100 pt-4">
+                <ul className="mt-auto space-y-1.5 border-t border-gray-100 pt-3 sm:space-y-2 sm:pt-4">
                   {service.items.map((item) => (
                     <li
                       key={item}
-                      className="flex items-center gap-2.5 text-[13px] text-gray-600"
+                      className="flex items-center gap-2 text-[11px] text-gray-600 sm:gap-2.5 sm:text-[13px]"
                     >
                       <svg
-                        className="h-4 w-4 shrink-0 text-orange"
+                        className="h-3.5 w-3.5 shrink-0 text-orange sm:h-4 sm:w-4"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth={2}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import {
   motion,
@@ -72,6 +72,19 @@ const PILL_START = 0.35;
 const PILL_STEP = 0.14;
 const PILL_SPAN = 0.12;
 
+/** true when viewport >= lg (1024px). Starts false (mobile-first) to avoid hydration mismatch. */
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isDesktop;
+}
+
 function Pill({
   progress,
   index,
@@ -123,7 +136,6 @@ function Pill({
           {body}
         </p>
       </div>
-
     </motion.li>
   );
 }
@@ -150,6 +162,7 @@ function RevealLine({
 
 export default function WhyChooseUs() {
   const ref = useRef<HTMLElement>(null);
+  const isDesktop = useIsDesktop();
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -161,8 +174,14 @@ export default function WhyChooseUs() {
     mass: 0.5,
   });
 
+  // Desktop: orange panel slides left -> right
   const panelX = useTransform(progress, [0, 0.35], ["-100%", "0%"]);
+  // Mobile: orange banner slides top -> bottom
+  const panelY = useTransform(progress, [0, 0.35], ["-100%", "0%"]);
+
+  // Desktop: content comes from right | Mobile: content comes down from top
   const contentX = useTransform(progress, [0, 0.35], [90, 0]);
+  const contentY = useTransform(progress, [0, 0.35], [-40, 0]);
   const contentOpacity = useTransform(progress, [0, 0.25], [0.2, 1]);
 
   const qY = useTransform(progress, [0.05, 0.8], ["80%", "0%"]);
@@ -214,10 +233,12 @@ export default function WhyChooseUs() {
         </motion.div>
       </motion.div>
 
-      {/* ---------- Orange left panel (circles only) ---------- */}
+      {/* ---------- Orange panel ----------
+          mobile: full width top banner (h-60), slides top -> bottom
+          desktop: left 30% full height, slides left -> right */}
       <motion.div
-        style={{ x: panelX }}
-        className="absolute inset-x-0 top-0 z-0 h-72 overflow-hidden bg-gradient-to-br from-[#F26122] via-[#EF5B15] to-[#C9430A] lg:inset-y-0 lg:right-auto lg:h-auto lg:w-[30%]"
+        style={isDesktop ? { x: panelX } : { y: panelY }}
+        className="absolute left-0 top-0 z-0 h-60 w-full overflow-hidden bg-gradient-to-br from-[#F26122] via-[#EF5B15] to-[#C9430A] lg:inset-y-0 lg:right-auto lg:h-auto lg:w-[30%]"
       >
         <motion.div
           aria-hidden="true"
@@ -249,7 +270,7 @@ export default function WhyChooseUs() {
         />
       </motion.div>
 
-      {/* ---------- Question mark + hand (your original placement) ---------- */}
+      {/* ---------- Question mark + hand (desktop) ---------- */}
       <motion.div
         style={{ y: qY, rotate: qRotate }}
         className="pointer-events-none absolute -bottom-6 -left-[2%] z-20 hidden h-[108%] w-[46%] rotate-20 origin-bottom-left lg:block"
@@ -263,44 +284,57 @@ export default function WhyChooseUs() {
         />
       </motion.div>
 
-      {/* Mobile version */}
-      <motion.div
-        style={{ y: qY, rotate: qRotate }}
-        className="pointer-events-none absolute left-1/2 top-2 z-20 h-72 w-56 -translate-x-1/2 lg:hidden"
+      {/* Mobile version — clipped inside the orange banner (h-60) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 z-20 h-60 overflow-hidden lg:hidden"
       >
-        <Image
-          src="/why.png"
-          alt=""
-          fill
-          sizes="240px"
-          className="object-contain object-bottom"
-        />
-      </motion.div>
+        <motion.div
+          style={{ y: qY, rotate: -15 }}
+          className="absolute bottom-0 left-2 h-52 rotate-15 w-[35%]"
+        >
+          <Image
+            src="/why.png"
+            alt=""
+            fill
+            sizes="170px"
+            className="object-contain object-bottom"
+          />
+        </motion.div>
+      </div>
 
       {/* ---------- Right content ---------- */}
       <motion.div
-        style={{ x: contentX, opacity: contentOpacity }}
-        className="relative z-10 px-6 pb-16 pt-80 lg:pb-20 lg:pl-[36%] lg:pr-12 lg:pt-20 xl:pl-[34%] xl:pr-20"
+        style={
+          isDesktop
+            ? { x: contentX, opacity: contentOpacity }
+            : { y: contentY, opacity: contentOpacity }
+        }
+        className="relative z-10 pb-16 lg:pb-20 lg:pl-[36%] lg:pr-12 lg:pt-20 xl:pl-[34%] xl:pr-20"
       >
-        <h2
-          id="why-partner-heading"
-          className="text-4xl font-extrabold uppercase leading-[0.95] tracking-tight text-[#2A0A2B] sm:text-5xl lg:text-6xl"
-        >
-          <RevealLine progress={progress} from={0.15}>
-            Why Partner
-          </RevealLine>
-          <RevealLine progress={progress} from={0.22}>
-            <span className="text-[#F26122]">With Us?</span>
-          </RevealLine>
-        </h2>
+        {/* Header: on mobile sits on the orange banner, right of the image (max width) */}
+        <div className="flex h-60 flex-col justify-center pl-[39%] pr-2 lg:block lg:h-auto lg:pl-0 lg:pr-0">
+          <h2
+            id="why-partner-heading"
+            className="w-full text-3xl font-extrabold uppercase leading-[0.95] tracking-tight text-[#2A0A2B] min-[400px]:text-[2.1rem] sm:text-5xl lg:text-6xl"
+          >
+            <RevealLine progress={progress} from={0.15}>
+              Why Partner
+            </RevealLine>
+            <RevealLine progress={progress} from={0.22}>
+              <span className="text-white lg:text-[#F26122]">With Us?</span>
+            </RevealLine>
+          </h2>
 
-        <motion.span
-          aria-hidden="true"
-          style={{ scaleX: barScale }}
-          className="mt-5 block h-1.5 w-24 origin-left rounded-full bg-[#F26122]"
-        />
+          <motion.span
+            aria-hidden="true"
+            style={{ scaleX: barScale }}
+            className="mt-3 block h-1.5 w-20 origin-left rounded-full bg-white lg:mt-5 lg:w-24 lg:bg-[#F26122]"
+          />
+        </div>
 
-        <ul className="mt-8 flex max-w-3xl flex-col gap-4">
+        {/* Cards: on mobile full width below the banner */}
+        <ul className="mt-6 flex max-w-3xl flex-col gap-4 px-6 lg:mt-8 lg:px-0">
           {points.map((p, i) => (
             <Pill
               key={p.title}
