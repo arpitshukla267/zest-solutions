@@ -28,7 +28,7 @@ export default function Footer() {
                 alt="Zest Solutions"
                 width={160}
                 height={48}
-                className="h-16 w-auto object-contain"
+                className="h-16 -ml-4 w-auto object-contain"
               />
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/50">
@@ -60,7 +60,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <p className="mt-8 border-t border-white/10 pt-5 text-xs text-white/40">
-          © {new Date().getFullYear()} Zest Solutions. All rights reserved.
+          © 2026 Zest Solutions. All rights reserved.
         </p>
       </div>
     </footer>
