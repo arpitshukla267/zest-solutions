@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
 
 const b2bServices = [
   {
@@ -163,7 +168,56 @@ const b2bServices = [
   },
 ];
 
+/* ------------------------ Scroll reveal ------------------------ */
+
+// Number of cards per row (matches the grid: 1 / 2 / 4)
+function useColumns() {
+  const [cols, setCols] = useState(4);
+
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      setCols(w >= 1024 ? 4 : w >= 768 ? 2 : 1);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return cols;
+}
+
+function Reveal({
+  children,
+  index,
+  cols,
+}: {
+  children: ReactNode;
+  index: number;
+  cols: number;
+}) {
+  const reduce = useReducedMotion();
+  // Cards in the same row come one after another (left → right)
+  const delay = (index % cols) * 0.2;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: reduce ? 0 : 70, scale: reduce ? 1 : 0.94 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
+      className="h-full will-change-transform"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ----------------------------- Section ----------------------------- */
+
 export default function B2BServices() {
+  const cols = useColumns();
+
   return (
     <section className="relative py-12 bg-white overflow-hidden">
       {/* Decorative SVG background illustration */}
@@ -196,6 +250,7 @@ export default function B2BServices() {
         </svg>
       </div>
 
+
       <div className="relative max-w-[95vw] mx-auto px-6 lg:px-8">
         {/* Header (centered) */}
         <div className="text-center max-w-3xl mx-auto mb-16 lg:mb-20">
@@ -208,32 +263,31 @@ export default function B2BServices() {
           </p>
         </div>
 
-        {/* Honeycomb-style grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-100 rounded-3xl overflow-hidden">
+        {/* Cards grid: 1 per row on mobile, 2 on tablet, 4 on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {b2bServices.map((service, i) => (
-            <div
-              key={service.title}
-              className="bg-white p-8 group hover:bg-gradient-to-br hover:from-plum/[0.03] hover:to-orange/[0.03] transition-all duration-500 relative"
-            >
-              {/* Number watermark */}
-              <span className="absolute top-4 right-5 text-6xl font-bold text-gray-50 group-hover:text-orange/5 transition-colors select-none">
-                {String(i + 1).padStart(2, "0")}
-              </span>
+            <Reveal key={service.title} index={i} cols={cols}>
+              <div className="group relative h-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-8 transition-all duration-500 hover:-translate-y-1 hover:border-orange/20 hover:bg-gradient-to-br hover:from-plum/[0.03] hover:to-orange/[0.03] hover:shadow-[0_20px_40px_-12px_rgba(30,10,50,0.18)]">
+                {/* Number watermark */}
+                <span className="absolute top-4 right-5 text-6xl font-bold text-gray-50 group-hover:text-orange/5 transition-colors select-none">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
 
-              <div className="relative z-10">
-                <div className="w-12 h-12 rounded-xl bg-cream text-plum flex items-center justify-center mb-5 group-hover:bg-orange group-hover:text-white transition-all duration-300">
-                  {service.icon}
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-cream text-plum flex items-center justify-center mb-5 group-hover:bg-orange group-hover:text-white transition-all duration-300">
+                    {service.icon}
+                  </div>
+
+                  <h3 className="text-lg font-bold text-plum mb-2">
+                    {service.title}
+                  </h3>
+
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    {service.description}
+                  </p>
                 </div>
-
-                <h3 className="text-lg font-bold text-plum mb-2">
-                  {service.title}
-                </h3>
-
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  {service.description}
-                </p>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
 

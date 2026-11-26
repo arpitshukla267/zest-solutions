@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+
+.font-manrope {
+  font-family: var(--font-manrope), "Manrope", sans-serif;
+}
+
+.font-poppins {
+  font-family: var(--font-poppins), "Poppins", sans-serif;
+}
 :root {
   --background: #ffffff;
   --foreground: #171717;

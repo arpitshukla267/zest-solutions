@@ -4,7 +4,6 @@ import WhoWeAre from "./components/WhoWeAre";
 import DualPower from "./components/DualPower";
 import B2BServices from "./components/B2BServices";
 import B2CServices from "./components/B2CServices";
-import MarketplaceCarousel from "./components/MarketplaceCarousel";
 import WhatWeManage from "./components/WhatWeManage";
 import WeMarket from "./components/WeMarket";
 import WhyChooseUs from "./components/WhyChooseUs";
@@ -23,7 +22,6 @@ export default function Home() {
         <WeMarket />
         <B2BServices />
         <B2CServices />
-        <MarketplaceCarousel />
         <WhyChooseUs />
         <CTASection />
       </main>

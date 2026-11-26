@@ -1,12 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import {
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
+import { useRef, type ReactNode } from "react";
 
-/**
- * Background images live in /public.
- * Change the extension here if yours isn't .png (e.g. ".webp", ".jpg").
- * Spaces in file names are URL-encoded (%20).
- */
 const B2B_BG = "/B2B-Marketing.png";
 const B2C_BG = "/B2C-E-commerce.png";
 
@@ -86,22 +90,24 @@ const b2cServices: Service[] = [
 ];
 
 type PanelProps = {
+  progress: MotionValue<number>;
+  tag: string;
   bg: string;
   icon: ReactNode;
-  iconClass: string;
   title: ReactNode;
   description: string;
   services: Service[];
   cta: string;
   href: string;
-  accent: string; // underline color under the CTA
-  overlay: string; // gradient to keep text legible over the image
+  accent: string;
+  overlay: string;
 };
 
 function Panel({
+  progress,
+  tag,
   bg,
   icon,
-  iconClass,
   title,
   description,
   services,
@@ -110,42 +116,62 @@ function Panel({
   accent,
   overlay,
 }: PanelProps) {
+  // Whole card scales up (width + height together) as you scroll
+  const scale = useTransform(progress, [0, 1], [0.8, 1]);
+
+  // Heading + description rise from the bottom as the card grows
+  const headY = useTransform(progress, [0.1, 0.7], [60, 0]);
+  const headOpacity = useTransform(progress, [0.1, 0.6], [0, 1]);
+  const descY = useTransform(progress, [0.2, 0.85], [60, 0]);
+  const descOpacity = useTransform(progress, [0.2, 0.75], [0, 1]);
+
   return (
-    <div className="relative isolate overflow-hidden min-h-[440px] lg:min-h-[480px] flex">
-      {/* Background image from /public */}
+    <motion.div
+      style={{ scale }}
+      className="group relative isolate flex min-h-[480px] overflow-hidden rounded-lg shadow-2xl shadow-plum/20 will-change-transform lg:min-h-[520px]"
+    >
+      {/* Background image */}
       <Image
         src={bg}
         alt=""
         fill
         sizes="(min-width: 1024px) 50vw, 100vw"
-        className="object-cover object-right -z-20"
-        priority={false}
+        className="-z-20 object-cover object-right transition-transform duration-700 group-hover:scale-105"
       />
-      {/* Readability overlay (text side only) */}
-      <div className={`absolute inset-0 -z-10 ${overlay}`} />
 
-      <div className="relative z-10 flex flex-col p-6 sm:p-8 lg:p-10 w-full">
-        {/* Icon tile */}
-        <div
-          className={`w-14 h-14 rounded-xl flex items-center justify-center backdrop-blur-md border text-white mb-5 [&>svg]:w-6 [&>svg]:h-6 ${iconClass}`}
-        >
-          {icon}
+      {/* Readability overlays */}
+      <div className={`absolute inset-0 -z-10 ${overlay}`} />
+      <div className="absolute inset-x-0 bottom-0 -z-10 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
+
+      <div className="relative z-10 flex w-full flex-col p-6 sm:p-8 lg:p-10">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/25 bg-white/15 text-white backdrop-blur-md [&>svg]:h-6 [&>svg]:w-6">
+            {icon}
+          </div>
+          <span className="text-sm font-semibold tracking-[0.25em] text-white/60">
+            {tag}
+          </span>
         </div>
 
-        <h3 className="text-2xl sm:text-3xl lg:text-[2.1rem] font-bold text-white leading-[1.15] tracking-tight mb-3">
+        <motion.h3
+          style={{ y: headY, opacity: headOpacity }}
+          className="mb-3 text-3xl font-bold leading-[1.1] tracking-tight text-white sm:text-4xl lg:text-[2.3rem]"
+        >
           {title}
-        </h3>
+        </motion.h3>
 
-        <p className="text-white/85 text-sm lg:text-base leading-relaxed max-w-[26rem] mb-5">
+        <motion.p
+          style={{ y: descY, opacity: descOpacity }}
+          className="mb-6 max-w-[28rem] text-sm leading-relaxed text-white/90 lg:text-base"
+        >
           {description}
-        </p>
+        </motion.p>
 
-        {/* Service pills */}
-        <ul className="flex flex-wrap gap-2.5 max-w-[34rem] mb-6">
+        <ul className="mb-8 flex max-w-[34rem] flex-wrap gap-2.5">
           {services.map((s) => (
             <li
               key={s.label}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[13px] font-medium text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-[13px] font-medium text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/25"
             >
               {s.icon}
               {s.label}
@@ -153,16 +179,15 @@ function Panel({
           ))}
         </ul>
 
-        {/* CTA */}
         <div className="mt-auto">
           <Link
             href={href}
-            className="group inline-flex flex-col text-white font-semibold text-base"
+            className="group/cta inline-flex flex-col text-base font-semibold text-white"
           >
             <span className="inline-flex items-center gap-3">
               {cta}
               <svg
-                className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
+                className="h-5 w-5 transition-transform duration-300 group-hover/cta:translate-x-1.5"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={1.8}
@@ -175,40 +200,65 @@ function Panel({
               </svg>
             </span>
             <span
-              className={`mt-2 h-0.5 w-12 rounded-full transition-all duration-300 group-hover:w-full ${accent}`}
+              className={`mt-2 h-0.5 w-12 rounded-full transition-all duration-300 group-hover/cta:w-full ${accent}`}
             />
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 export default function DualPower() {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // 0 when the cards enter the screen -> 1 when they are fully in view
+  const { scrollYProgress } = useScroll({
+    target: gridRef,
+    offset: ["start 95%", "start 30%"],
+  });
+  const progress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 24,
+    mass: 0.4,
+  });
+
   return (
     <section
       id="solutions"
       className="relative overflow-hidden bg-white py-20 lg:py-28"
     >
-
       {/* Header */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 mb-12 lg:mb-16 text-center">
-        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-plum tracking-tight leading-tight mb-5">
+      <div className="mx-auto mb-12 max-w-7xl px-6 text-center lg:mb-12 lg:px-8">
+        <motion.h2
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="mb-5 text-4xl font-bold leading-tight tracking-tight text-plum sm:text-5xl lg:text-6xl"
+        >
           Dual Power <span className="text-orange">Solutions</span>
-        </h2>
-        <p className="text-base lg:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.5 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
+          className="mx-auto max-w-2xl text-base leading-relaxed text-gray-500 lg:text-lg"
+        >
           One partner for all your business needs. Whether you&apos;re selling
           to businesses or consumers, we have the expertise to help you succeed.
-        </p>
+        </motion.p>
       </div>
 
-      {/* Split card */}
-      <div className="max-w-[90vw] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 rounded-[2rem] overflow-hidden shadow-2xl shadow-plum/20">
+      {/* Two separate cards */}
+      <div className="mx-auto max-w-[94vw] px-4 sm:px-6">
+        <div ref={gridRef} className="grid gap-6 lg:grid-cols-2 lg:gap-8">
           <Panel
+            progress={progress}
+            tag="01"
             bg={B2B_BG}
             icon={Icons.building}
-            iconClass="bg-white/10 border-white/20 text-purple-200"
             title={
               <>
                 B2B Marketing
@@ -221,12 +271,13 @@ export default function DualPower() {
             cta="Explore B2B Solutions"
             href="#"
             accent="bg-purple-400"
-            overlay="bg-gradient-to-r from-black/30 via-transparent to-transparent"
+            overlay="bg-gradient-to-r from-black/60 via-black/25 to-transparent"
           />
           <Panel
+            progress={progress}
+            tag="02"
             bg={B2C_BG}
             icon={Icons.cart}
-            iconClass="bg-white/15 border-white/25"
             title={
               <>
                 B2C E-commerce
@@ -239,7 +290,7 @@ export default function DualPower() {
             cta="Explore B2C Solutions"
             href="#"
             accent="bg-yellow-300"
-            overlay="bg-gradient-to-r from-black/15 via-transparent to-transparent"
+            overlay="bg-gradient-to-r from-black/50 via-black/20 to-transparent"
           />
         </div>
       </div>

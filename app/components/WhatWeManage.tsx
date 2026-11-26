@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 /* ----------------------------- Icons ----------------------------- */
 
@@ -186,42 +187,46 @@ const services: Service[] = [
 
 /* ------------------------ Scroll reveal ------------------------ */
 
-function Reveal({
-  children,
-  delay = 0,
-}: {
-  children: ReactNode;
-  delay?: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+// Number of cards per row (matches the grid: 1 / 2 / 3)
+function useColumns() {
+  const [cols, setCols] = useState(3);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShown(true);
-          io.disconnect();
-        }
-      },
-      { threshold: 0.2, rootMargin: "0px 0px -6% 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    const update = () => {
+      const w = window.innerWidth;
+      setCols(w >= 1280 ? 3 : w >= 768 ? 2 : 1);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
+  return cols;
+}
+
+function Reveal({
+  children,
+  index,
+  cols,
+}: {
+  children: ReactNode;
+  index: number;
+  cols: number;
+}) {
+  const reduce = useReducedMotion();
+  // Cards in the same row come one after another (left → right)
+  const delay = (index % cols) * 0.2;
+
   return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: shown ? `${delay}ms` : "0ms" }}
-      className={`h-full transition-all duration-700 ease-out motion-reduce:transition-none ${
-        shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-      }`}
+    <motion.div
+      initial={{ opacity: 0, y: reduce ? 0 : 70, scale: reduce ? 1 : 0.94 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
+      className="h-full will-change-transform"
     >
       {children}
-    </div>
+    </motion.div>
   );
 }
 
@@ -306,6 +311,8 @@ function ServiceCard({ service }: { service: Service }) {
 /* ----------------------------- Section ----------------------------- */
 
 export default function WhatWeManage() {
+  const cols = useColumns();
+
   return (
     <section
       id="manage"
@@ -334,7 +341,7 @@ export default function WhatWeManage() {
         {/* Cards grid: 1 per row on mobile, 2 on tablet, 3 on desktop */}
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {services.map((service, i) => (
-            <Reveal key={service.title} delay={(i % 3) * 150}>
+            <Reveal key={service.title} index={i} cols={cols}>
               <ServiceCard service={service} />
             </Reveal>
           ))}
